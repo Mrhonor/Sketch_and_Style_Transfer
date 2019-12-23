@@ -2,6 +2,8 @@ from torch.utils.data import Dataset
 from PIL import Image
 import os
 import SDoG
+import scipy.io as sio
+import numpy as np
 
 
 class CUB_200(Dataset):
@@ -81,17 +83,56 @@ class CUB_200(Dataset):
             image_id, x, y, width, height = line.strip('\n').split()
             self._bounding_boxes[image_id] = (float(x), float(y), float(x) + float(width), float(y) + float(height))
 
+class Car(Dataset):
+    def __init__(self, root, train=True, transform=None):
+        super(Car, self).__init__()
+        self.root = root
+        self.train = train
+        self.transform_ = transform
+        self.bounding_boxes_file = os.path.join(root, 'car_devkit/devkit/cars_train_annos.mat')
+        self.mat = sio.loadmat(self.bounding_boxes_file)
+        self.boxes = self.mat['annotations'][0]
+
+    def getitem(self, index):
+        num = int(index / 10)
+        if num == 0:
+            image_path = os.path.join(self.root, 'cars_train',  '0000'+str(index)+'.jpg')
+        if num == 1:
+            image_path = os.path.join(self.root, 'cars_train',  '000'+str(index)+'.jpg')
+        if num == 2:
+            image_path = os.path.join(self.root, 'cars_train',  '00'+str(index)+'.jpg')
+        if num == 3:
+            image_path = os.path.join(self.root, 'cars_train',  '0'+str(index)+'.jpg')
+
+        print(image_path)
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = img.convert('RGB')
+
+        box = self.boxes[index-1]
+        print(box.shape)
+        print(box)
+        list_box = (int(box[0]), int(box[1]), int(box[2]), int(box[3])) 
+        print(list_box)
+        img = img.crop(list_box)
+        if self.transform_ is not None:
+            img = self.transform_(img)
+        return img
+
 
 
 
 if __name__ == '__main__':
     cub200_root = '../'
-    cub = CUB_200(cub200_root)
-    i = 0
-    for img, label in cub:
-        print(type(img))
-        print(label)
-        img.save('origin'+str(i)+'.jpg')
-        i = i+1
-        if i >= 11000:
-            break
+    car = Car(cub200_root, transform=SDoG.XDOG)
+    img = car.getitem(1)
+    img.save('car'+str(1)+'.jpg')
+    # cub = CUB_200(cub200_root)
+    # i = 0
+    # for img, label in cub:
+    #     print(type(img))
+    #     print(label)
+    #     img.save('origin'+str(i)+'.jpg')
+    #     i = i+1
+    #     if i >= 11000:
+    #         break
