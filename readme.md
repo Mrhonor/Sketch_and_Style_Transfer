@@ -22,6 +22,8 @@ cub = CUB_200("../", transform=SDoG.XDOG)
 for img, label in cub:
 ~~~
 3. Car类调用方法
+
+Car类是处理斯坦福大学的Car dataset数据集的类
 ~~~
 class Car(Dataset):
     def __init__(self, root, train=True, transform=None):
