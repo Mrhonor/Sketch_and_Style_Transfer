@@ -20,10 +20,10 @@ ndf=64
 niter=501
 lr=0.0002
 beta1=0.5
-ngpu=2
+ngpu=1 #2
 netG=''
 netD=''
-outf='/home/default2/sjw/GAN_file'
+outf='GAN_file/'
 batchSize=64
 device = torch.device("cuda:0")
 try:
@@ -43,10 +43,10 @@ cudnn.benchmark = True
 
 transform=transforms.Compose([transforms.ToTensor(),
                              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-dataroot='/home/default2/sjw/dataset'
+dataroot='../dataset/'
 bird_dataset=datasets.ImageFolder(root=dataroot,transform=transform)
 dataloader = torch.utils.data.DataLoader(bird_dataset, batch_size=batchSize,
-                                         shuffle=True,num_workers=2)
+                                         shuffle=True,num_workers=0)
 
 # custom weights initialization called on netG and netD
 def weights_init(m):

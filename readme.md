@@ -37,3 +37,24 @@ self.bounding_boxes_file = os.path.join(root, 'car_devkit/devkit/cars_train_anno
 car = Car('../', transform=SDoG.XDOG)
 img = car.getitem(image_id)
 ~~~~
+
+4. Concatenate函数的用法
+
+该函数用于将简笔画图像和原图拼接在一起，训练时数据集使用该函数拼接生成的图像
+~~~
+def Concatenate(root, path1, path2):
+~~~
+**root**:数据集存放目录
+
+**path1**:简笔画图像所在文件夹
+
+**path2**:原图所在文件夹
+
+拼接后生成的图像位于 **root/dataset/bird**
+
+----
+## 运行程序
+~~~
+python data_loader.py
+python GAN.py
+~~~

@@ -119,20 +119,79 @@ class Car(Dataset):
             img = self.transform_(img)
         return img
 
-
+def Concatenate(root, path1, path2):
+    j=0
+    for i in range(15000):
+        sketch_path = os.path.join(path1, 'sketch'+str(i)+'.jpg')
+        origin_path = os.path.join(path2, 'origin'+str(i)+'.jpg')
+        if(os.path.exists(sketch_path) and os.path.exists(origin_path)):
+            img1 = Image.open(sketch_path)
+            rgb = img1.convert('RGB')
+            rgb = rgb.resize((64,64), Image.ANTIALIAS)
+            rgb_npy = np.array(rgb)
+            img2=Image.open(origin_path)
+            img2 = img2.resize((64,64), Image.ANTIALIAS)
+            img2_npy = np.array(img2)
+            img = np.concatenate((rgb_npy,img2_npy), 1)
+            img = Image.fromarray(img)
+            try:
+                os.makedirs(root + 'dataset/bird/')
+            except OSError:
+                pass
+            img.save(root + 'dataset/bird/img' + str(j) + '.jpg')
+            j+=1
 
 
 if __name__ == '__main__':
     cub200_root = '../'
-    car = Car(cub200_root, transform=SDoG.XDOG)
-    img = car.getitem(1)
-    img.save('car'+str(1)+'.jpg')
-    # cub = CUB_200(cub200_root)
-    # i = 0
-    # for img, label in cub:
-    #     print(type(img))
-    #     print(label)
-    #     img.save('origin'+str(i)+'.jpg')
-    #     i = i+1
-    #     if i >= 11000:
-    #         break
+    origin_cub_train = CUB_200(cub200_root)
+    sketch_cub_train = CUB_200(cub200_root, transform=SDoG.XDOG)
+    origin_cub_test = CUB_200(cub200_root, train=None)
+    sketch_cub_test = CUB_200(cub200_root, train=None, transform=SDoG.XDOG)
+    sketch_path = cub200_root + 'sketch/'
+    origin_path = cub200_root + 'origin/'
+    try:
+        os.makedirs(sketch_path)
+        os.makedirs(origin_path)
+    except OSError:
+        pass
+
+    i = 0
+    for img, label in origin_cub_train:
+        print(type(img))
+        print(label)
+        img.save(origin_path+'origin'+str(i)+'.jpg')
+        i = i+1
+        if i >= origin_cub_train.__len__():
+            break
+    print(i)
+    stop = i + origin_cub_test.__len__()
+    for img, label in origin_cub_test:
+        print(type(img))
+        print(label)
+        img.save(origin_path+'origin'+str(i)+'.jpg')
+        i = i+1
+        if i >= stop:
+            break
+
+    i = 0
+    for img, label in sketch_cub_train:
+        print(type(img))
+        print(label)
+        img.save(sketch_path+'sketch'+str(i)+'.jpg')
+        i = i+1
+        if i >= sketch_cub_train.__len__():
+            break
+
+    stop = i + sketch_cub_test.__len__()
+    for img, label in sketch_cub_test:
+        print(type(img))
+        print(label)
+        img.save(sketch_path+'sketch'+str(i)+'.jpg')
+        i = i+1
+        if i >= stop:
+            break
+
+    Concatenate(cub200_root, sketch_path, origin_path)
+
+    
