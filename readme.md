@@ -4,6 +4,8 @@
 1. 数据集放于该项目的上一个目录
 2. CUB_200类调用用法
 CUB_200类是处理鸟内数据集的方法
+
+CUB_200_2011数据集下载地址 <http://www.vision.caltech.edu/visipedia/CUB-200-2011.html>
 ~~~
 class CUB_200(Dataset):
     def __init__(self, root, train=True, transform=None):
@@ -24,6 +26,9 @@ for img, label in cub:
 3. Car类调用方法
 
 Car类是处理斯坦福大学的Car dataset数据集的类
+
+Car_dataset数据集下载地址:
+[官网](http://ai.stanford.edu/~jkrause/cars/car_dataset.html) 
 ~~~
 class Car(Dataset):
     def __init__(self, root, train=True, transform=None):
@@ -54,6 +59,7 @@ def Concatenate(root, path1, path2):
 
 ----
 ## 运行程序
+目前默认读入鸟类数据集
 ~~~
 python data_loader.py
 python GAN.py
