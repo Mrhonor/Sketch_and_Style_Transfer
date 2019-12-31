@@ -1,14 +1,18 @@
-from torch.utils.data import Dataset
-from PIL import Image
 import os
-import SDoG
-import scipy.io as sio
+
+import cv2
 import numpy as np
+import scipy.io as sio
+from PIL import Image
+from torch.utils.data import Dataset
+from tqdm import tqdm
+
+import SDoG
 
 
-class CUB_200(Dataset):
+class CUB(Dataset):
     def __init__(self, root, train=True, transform=None):
-        super(CUB_200, self).__init__()
+        super(CUB, self).__init__()
         self.root = root
         self.train = train
         self.transform_ = transform
@@ -29,6 +33,7 @@ class CUB_200(Dataset):
         self._get_id_to_label()
         self._get_path_label()
         self._get_bounding_box()
+
 
     def _train_test_split(self):
 
@@ -82,6 +87,30 @@ class CUB_200(Dataset):
         for line in open(self.bounding_boxes_file):
             image_id, x, y, width, height = line.strip('\n').split()
             self._bounding_boxes[image_id] = (float(x), float(y), float(x) + float(width), float(y) + float(height))
+    
+    def _get_origin_image(self, index):
+        if self.train:
+            image_name, label, image_id = self._train_path_label[index]
+        else:
+            image_name, label, image_id = self._test_path_label[index]
+        image_path = os.path.join(self.root, 'images', image_name)
+        img = Image.open(image_path)
+        if img.mode == 'L':
+            img = img.convert('RGB')
+        return img, image_id
+
+    def _show_bounding_box(self, index):
+        origin, image_id = self._get_origin_image(int(index)-1)
+        x1, y1, x2, y2 = self._bounding_boxes[image_id]
+        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        for x in range(x1, x2):
+            origin.putpixel((x, y1), (255, 0, 0))
+            origin.putpixel((x, y2), (255, 0, 0))
+        for y in range(y1, y2):
+            origin.putpixel((x1, y), (255, 0, 0))
+            origin.putpixel((x2, y), (255, 0, 0))
+        return origin
+        
 
 class Car(Dataset):
     def __init__(self, root, train=True, transform=None):
@@ -121,7 +150,7 @@ class Car(Dataset):
 
 def Concatenate(root, path1, path2):
     j=0
-    for i in range(15000):
+    for i in tqdm(range(15000)):
         sketch_path = os.path.join(path1, 'sketch'+str(i)+'.jpg')
         origin_path = os.path.join(path2, 'origin'+str(i)+'.jpg')
         if(os.path.exists(sketch_path) and os.path.exists(origin_path)):
@@ -135,21 +164,22 @@ def Concatenate(root, path1, path2):
             img = np.concatenate((rgb_npy,img2_npy), 1)
             img = Image.fromarray(img)
             try:
-                os.makedirs(root + 'dataset/bird/')
+                os.makedirs(root + 'bird/')
             except OSError:
                 pass
-            img.save(root + 'dataset/bird/img' + str(j) + '.jpg')
+            img.save(root + 'bird/img' + str(j) + '.jpg')
             j+=1
 
 
 if __name__ == '__main__':
-    cub200_root = '../'
-    origin_cub_train = CUB_200(cub200_root)
-    sketch_cub_train = CUB_200(cub200_root, transform=SDoG.XDOG)
-    origin_cub_test = CUB_200(cub200_root, train=None)
-    sketch_cub_test = CUB_200(cub200_root, train=None, transform=SDoG.XDOG)
-    sketch_path = cub200_root + 'sketch/'
-    origin_path = cub200_root + 'origin/'
+    cub200_root = '../cub200/'
+    save_root = '../dataset/'
+    origin_cub_train = CUB(cub200_root)
+    sketch_cub_train = CUB(cub200_root, transform=SDoG.XDOG)
+    origin_cub_test = CUB(cub200_root, train=None)
+    sketch_cub_test = CUB(cub200_root, train=None, transform=SDoG.XDOG)
+    sketch_path = save_root + 'sketch/'
+    origin_path = save_root + 'origin/'
     try:
         os.makedirs(sketch_path)
         os.makedirs(origin_path)
@@ -157,41 +187,30 @@ if __name__ == '__main__':
         pass
 
     i = 0
-    for img, label in origin_cub_train:
-        print(type(img))
-        print(label)
+    for img, label in tqdm(origin_cub_train):
         img.save(origin_path+'origin'+str(i)+'.jpg')
         i = i+1
         if i >= origin_cub_train.__len__():
             break
-    print(i)
     stop = i + origin_cub_test.__len__()
-    for img, label in origin_cub_test:
-        print(type(img))
-        print(label)
+    for img, label in tqdm(origin_cub_test):
         img.save(origin_path+'origin'+str(i)+'.jpg')
         i = i+1
         if i >= stop:
             break
 
     i = 0
-    for img, label in sketch_cub_train:
-        print(type(img))
-        print(label)
+    for img, label in tqdm(sketch_cub_train):
         img.save(sketch_path+'sketch'+str(i)+'.jpg')
         i = i+1
         if i >= sketch_cub_train.__len__():
             break
 
     stop = i + sketch_cub_test.__len__()
-    for img, label in sketch_cub_test:
-        print(type(img))
-        print(label)
+    for img, label in tqdm(sketch_cub_test):
         img.save(sketch_path+'sketch'+str(i)+'.jpg')
         i = i+1
         if i >= stop:
             break
 
-    Concatenate(cub200_root, sketch_path, origin_path)
-
-    
+    Concatenate(save_root, sketch_path, origin_path)
