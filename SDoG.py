@@ -2,13 +2,10 @@ from PIL import Image, ImageEnhance
 from pylab import *
 import numpy as np
 from scipy.ndimage import filters
-#from skimage import io
 import glob, os
 
-# in_dir = 'debug'
-# out_dir = in_dir + '_combine'
-out_dir = 'out'
-if not os.path.exists(out_dir): os.mkdir(out_dir)
+# out_dir = 'out'
+# if not os.path.exists(out_dir): os.mkdir(out_dir)
 
 def XDOG(im):
     Gamma = 0.89 #0.97  ##过滤线条
