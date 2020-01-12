@@ -61,13 +61,8 @@ for img, label in cub:
 
 Car类是处理斯坦福大学的Car dataset数据集的类
 
-<<<<<<< HEAD
 Car_dataset数据集下载地址:
 [官网](http://ai.stanford.edu/~jkrause/cars/car_dataset.html) 
-=======
- Car_dataset数据集下载地址: [官网](http://ai.stanford.edu/~jkrause/cars/car_dataset.html) 
-
->>>>>>> lxh
 ~~~
 class Car(Dataset):
     def __init__(self, root, train=True, transform=None):
