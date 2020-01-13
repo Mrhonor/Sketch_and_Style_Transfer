@@ -2,6 +2,7 @@ from PIL import Image
 import math
 import numpy as np
 import cv2
+import scipy.stats
 
 def get_cos_distance(list1, list2):
 
@@ -106,7 +107,7 @@ def find_min_loss(n):
    return index 
 
 input_path = 'input.jpg'
-outcome_path = 'fake/'
+outcome_path = 'fake(1)/'
 IMG_SIZE = 64
 
 PIL_img = Image.open(input_path)
@@ -119,50 +120,67 @@ hash1 = pHash(img1[0:64, 0:64])
 loss_array = 1000*np.ones(5)
 index_array2 = np.zeros(5, dtype=int)
 
-similar_array = np.zeros(15, dtype=float)
-index_array = np.zeros(15, dtype=int)
+# similar_array = np.zeros(15, dtype=float)
+similar_array = np.ones(5, dtype=float)
+index_array = np.zeros(5, dtype=int)
 
-# 直方图方法计算
-max_similar = 0
-
-input_hist = PIL_img.histogram()
-
+array1 = np.array(PIL_img.histogram()).reshape(-1)
+print(array1.size)
+## KL散度计算
 for i in range(64):
    img = Image.open(outcome_path+'fake_samples_'+str(i)+'.png')
    crop_img = img.crop((0*IMG_SIZE, 0*IMG_SIZE, 1*IMG_SIZE, 1*IMG_SIZE))
-   outcome_hist = crop_img.histogram()
-   similar = get_cos_distance(input_hist, outcome_hist)
-   index = find_min_loss(similar_array)
-   similar_array[index] = similar
-   index_array[index] = i
+   similar = scipy.stats.entropy(np.array(crop_img.histogram()).reshape(-1), array1.reshape(-1))
+   index = find_max_loss(similar_array)
+   if(similar<similar_array[index]):
+      similar_array[index] = similar
+      index_array[index] = i
 
-for i in range(15):
+for i in range(5):
    print("index:%d, loss:%f"%(index_array[i], similar_array[i]))
    # Image.open(outcome_path+'fake_samples_'+str(int(index_array[i]))+'.png').show()
 
-# print("index:%d, similar:%f"%(max_index, max_similar))
-# Image.open(outcome_path+'fake_samples_'+str(max_index)+'.png').show()
+# # 直方图方法计算
+# max_similar = 0
 
-# 感知哈希算法
-for i in index_array:
-   img = cv2.imread(outcome_path+'fake_samples_'+str(i)+'.png')
-   crop_img = img[0:64, 0:64]
-   hash2 = pHash(crop_img)
-   loss = cmpHash(hash1, hash2)
-   j = find_max_loss(loss_array)
-   loss_array[j] = loss
-   index_array2[j] = i   
+# input_hist = PIL_img.histogram()
 
-for i in range(5):
-   print("index:%d, loss:%f"%(index_array2[i], loss_array[i]))
-   # Image.open(outcome_path+'fake_samples_'+str(int(index_array2[i]))+'.png').show()
+# for i in range(64):
+#    img = Image.open(outcome_path+'fake_samples_'+str(i)+'.png')
+#    crop_img = img.crop((0*IMG_SIZE, 0*IMG_SIZE, 1*IMG_SIZE, 1*IMG_SIZE))
+#    outcome_hist = crop_img.histogram()
+#    similar = get_cos_distance(input_hist, outcome_hist)
+#    index = find_min_loss(similar_array)
+#    similar_array[index] = similar
+#    index_array[index] = i
+
+# for i in range(15):
+#    print("index:%d, loss:%f"%(index_array[i], similar_array[i]))
+#    # Image.open(outcome_path+'fake_samples_'+str(int(index_array[i]))+'.png').show()
+
+# # print("index:%d, similar:%f"%(max_index, max_similar))
+# # Image.open(outcome_path+'fake_samples_'+str(max_index)+'.png').show()
+
+# # 感知哈希算法
+# for i in index_array:
+#    img = cv2.imread(outcome_path+'fake_samples_'+str(i)+'.png')
+#    crop_img = img[0:64, 0:64]
+#    hash2 = pHash(crop_img)
+#    loss = cmpHash(hash1, hash2)
+#    j = find_max_loss(loss_array)
+#    loss_array[j] = loss
+#    index_array2[j] = i   
+
+# for i in range(5):
+#    print("index:%d, loss:%f"%(index_array2[i], loss_array[i]))
+#    # Image.open(outcome_path+'fake_samples_'+str(int(index_array2[i]))+'.png').show()
 
 
 # 投影对比法2
 x1 = calc_vector2(PIL_img)
 min_loss = 110000
 
-for i in index_array2:
+for i in index_array:
    img = Image.open(outcome_path+'fake_samples_'+str(i)+'.png')
    crop_img = img.crop((0*IMG_SIZE, 0*IMG_SIZE, 1*IMG_SIZE, 1*IMG_SIZE))
    x2 = calc_vector2(crop_img)
@@ -192,8 +210,4 @@ Image.open(outcome_path+'fake_samples_'+str(index)+'.png').show()
 
 # print("index:%d, loss:%f"%(index, min_loss))
 # Image.open(outcome_path+'fake_samples_'+str(index)+'.png').show()
-
-
-
-
 
