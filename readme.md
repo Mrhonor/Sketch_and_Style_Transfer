@@ -91,6 +91,15 @@ def Concatenate(root, path1, path2):
 
 拼接后生成的图像位于 **root/dataset/bird**\
 
+----
+## Style_transfer
+
+Style Transfer GAN 使用的是cycleGAN，根据论文Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks复现
+Dataset使用bash ./datasets/download_cyclegan_dataset.sh maps
+训练模型：python cycleGAN.py --data_root 'your data directory'
+
+
+Style Transfer CNN旨在对比，使用的是VGG19的已经训练好的网络。
 
 
 
