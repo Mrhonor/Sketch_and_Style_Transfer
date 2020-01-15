@@ -37,16 +37,22 @@ def calc_vector(img):
 
 def calc_vector2(img):
    two_value_img = img.convert('1')
-   x = np.zeros(two_value_img.size[0])
+   x = np.zeros(two_value_img.size[0]*2)
    num = 0 
    for i in range(two_value_img.size[0]):
       sum = 0
+      sum2 = 0
       for j in range(i):
          if(two_value_img.getpixel((j,i-j)) == 255):
             sum = sum + 1
             num = num + 1
+         if(two_value_img.getpixel((two_value_img.size[0]-j-1, two_value_img.size[0]+j-i-1)) == 255):
+            sum2 = sum2 + 1
+            num = num + 1
       x[i] = sum
+      x[i+64] = sum
    return x/num
+
 
 def compare_similarity(x1,y1,x2,y2):
    distx = np.linalg.norm(x1 - x2)
