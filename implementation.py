@@ -15,7 +15,7 @@ nz=100
 device = torch.device("cpu")
 
 
-manualSeed =random.randint(1, 10000)
+manualSeed = 3279
 print("Random Seed: ",manualSeed)
 random.seed(manualSeed)
 torch.manual_seed(manualSeed)
@@ -31,7 +31,8 @@ netD.load_state_dict(torch.load('netD_epoch_250.pth',map_location='cpu'))
 
 
 #测试时的输入图像
-input=Image.open('img0.jpg')
+input_path='img0.jpg'
+input=Image.open(input_path)
 input_sketch =input.crop((0,0,64,64))
 input_sketch_gray=input_sketch.convert('L')
 input_tensor=transforms.ToTensor()(input_sketch)
@@ -72,15 +73,20 @@ print(index)
 
 def calc_vector2(img):
    two_value_img = img.convert('1')
-   x = np.zeros(two_value_img.size[0])
+   x = np.zeros(two_value_img.size[0]*2)
    num = 0
    for i in range(two_value_img.size[0]):
       sum = 0
+      sum2 = 0
       for j in range(i):
-         if(two_value_img.getpixel((j,i-j)) == 0):
+         if(two_value_img.getpixel((j,i-j)) == 255):
             sum = sum + 1
             num = num + 1
+         if(two_value_img.getpixel((two_value_img.size[0]-j-1, two_value_img.size[0]+j-i-1)) == 255):
+            sum2 = sum2 + 1
+            num = num + 1
       x[i] = sum
+      x[127-i] = sum2
    return x
 x1 = calc_vector2(input_sketch_gray)
 
@@ -123,8 +129,17 @@ for i in range(500):
     optimizer.step()
 
 
+
 noise[re1[min_index]]=z
 noise_img_final=netG(noise)
 utils.save_image(noise_img_final[re1[min_index]].detach(),
                     'final1_img.jpg',
                     normalize=True)
+
+img_1=Image.open('final1_img.jpg')
+array1=np.array(input_sketch)
+array2=np.array(img_1)
+array2=array2[:,64:,:]
+img_final = np.concatenate((array1,array2), 1)
+img_final = Image.fromarray(img_final)
+img_final.save('img_final.jpg')
