@@ -89,18 +89,22 @@ def Concatenate(root, path1, path2):
 
 **path2**:原图所在文件夹
 
-拼接后生成的图像位于 **root/dataset/bird**\
-
+拼接后生成的图像位于 **root/dataset/bird**
 
 
 
 
 ----
 ## 运行程序
-目前默认读入鸟类数据集
+目前默认使用Car_dataset
 ~~~
 python data_loader.py
 python GAN.py
 ~~~
+运行完GAN.py得到模型参数后，在目录下放入img0.jpg。运行
+~~~
+python implementation.py
+~~~
+可以得到生成出来的图片img_final.jpg。运行时间大约为1分钟。
 
 注意：运行GAN.py和Visualize.py时，需分别在项目中创建GAN_file文件夹和visualize文件夹保存结果。

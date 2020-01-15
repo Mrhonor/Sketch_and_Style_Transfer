@@ -10,6 +10,7 @@ import heapq
 import numpy as np
 from Discriminator import Discriminator
 from Generator import Generator
+outf = 'GAN_file/'
 
 nz=100
 device = torch.device("cpu")
@@ -22,23 +23,20 @@ torch.manual_seed(manualSeed)
 cudnn.benchmark = True
 
 netG = Generator(0).to(device)
-netG.load_state_dict(torch.load('netG_epoch_250.pth',map_location='cpu'))
+netG.load_state_dict(torch.load(outf+'netG_epoch_250.pth',map_location='cpu'))
 
 netD=Discriminator(0).to(device)
-netD.load_state_dict(torch.load('netD_epoch_250.pth',map_location='cpu'))
-
-
-
+netD.load_state_dict(torch.load(outf+'netD_epoch_250.pth',map_location='cpu'))
 
 #测试时的输入图像
-input_path='img0.jpg'
+input_path= 'img0.jpg'
 input=Image.open(input_path)
-input_sketch =input.crop((0,0,64,64))
+# input_sketch =input.crop((0,0,64,64))
+input_sketch = input.resize((64,64))
 input_sketch_gray=input_sketch.convert('L')
 input_tensor=transforms.ToTensor()(input_sketch)
 input_tensor=(input_tensor-0.5)*2
 input_sketch_gray_hist=(torch.tensor(input_sketch_gray.histogram(),dtype=float)+1)/4352
-
 
 #生成随机噪声，然后通过生成器生成图片
 noise = torch.randn(64, nz, 1, 1, device=device)
