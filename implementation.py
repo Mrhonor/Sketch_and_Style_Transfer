@@ -15,7 +15,7 @@ nz=100
 device = torch.device("cpu")
 
 
-manualSeed = 3279
+manualSeed = random.randint(1, 10000)
 print("Random Seed: ",manualSeed)
 random.seed(manualSeed)
 torch.manual_seed(manualSeed)
