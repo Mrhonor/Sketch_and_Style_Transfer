@@ -1,45 +1,39 @@
 # 简笔画生成图像+风格迁移
 
-2019/12/31 更新：
+## 课题背景
 
-更新readme.md，更新数据集使用说明
+(之前开题报告的时候好像没讲这一部分，按那个PPT的思路就行了)
 
-更新项目结构，Generator和Discriminator单独放在一个py文件，weights_init函数放在\_\_utils\_\_.py里方便调用
+## 相关工作
 
-更新Visualize.py，对于GAN部分，完成Generator生成图像分布的可视化，主要使用t-SNE降维方法降到2维或3维展示；完成Generator和Discriminator的卷积可视化（Generator的卷积可视化没有什么可解释性，因为输入是随机噪声而且卷积输出不是三通道的，只能观察到像素级的变化；从Discriminator的卷积可视化结果看出其分类效果还不是很好，没有提取到很多有效的特征，可能要继续加大Epoch，或者先用噪声和real_data预训练Discriminator一会儿再和Generator一起训练？）
+(主要介绍一下那篇Contextual GAN的论文)
 
-在GAN.py中完成Loss变化曲线的可视化，数据结果和图像结果默认保存在visualize文件夹中
+## 数据集准备
+可由以下链接获得经处理的数据集，将SG_dataset和ST_dataset两个文件夹放在项目的同级目录中即可。
 
-在Visualize_dataset.ipynb中简单复现了部分鸟类数据集的处理过程，但是做到一半发现这个好像没有什么用。。如果后面写论文需要再继续做
-
-
-
-TODO：
-
-风格迁移部分可视化
-
-（GAN运行时KL散度和JS散度变化的可视化）
+链接：https://pan.baidu.com/s/1yLY2L0bKefEcqOMJq4J36w 提取码：wsl7 
 
 
-
-## 数据载入用法
-可由以下链接获得经过人工筛选的数据集，放在项目的同级文件夹dataset中即可。
-
-链接：https://pan.baidu.com/s/1Vzov0thOXT_-f2RWkmWgMA  提取码：u841 
 
 以下是由原始数据集生成本项目所需数据集的步骤：
 
+Sketch Generation部分：
 
+[1]. 获取原始数据集CUB_200_2011，[下载地址]( http://www.vision.caltech.edu/visipedia/CUB-200-2011.html )  将CUB_200文件夹放在项目的同级目录中
 
-**data_loader.py**
+[2]. 获取原始数据集Car_dataset。[下载地址](http://ai.stanford.edu/~jkrause/cars/car_dataset.html) 同样将Car文件夹放在项目的同级目录中
 
-原始数据集：
+**[3]. 在SketchGeneration文件夹中运行data_loader.py**
 
- CUB_200_2011数据集下载地址 http://www.vision.caltech.edu/visipedia/CUB-200-2011.html 
+```
+cd SketchGeneration
+python data_loader.py
+```
 
-1. 数据集放于该项目的上一个目录
-2. CUB_200类调用用法
-CUB_200类是处理鸟内数据集的方法
+详解：
+
+CUB_200_2011:
+
 ~~~
 class CUB_200(Dataset):
     def __init__(self, root, train=True, transform=None):
@@ -57,11 +51,7 @@ transform=SDoG.XDOG
 cub = CUB_200("../", transform=SDoG.XDOG)
 for img, label in cub:
 ~~~
-3. Car类调用方法
-
-Car类是处理斯坦福大学的Car dataset数据集的类
-
-Car_dataset数据集下载地址: [官网](http://ai.stanford.edu/~jkrause/cars/car_dataset.html) 
+Car_dataset:
 
 ~~~
 class Car(Dataset):
@@ -77,7 +67,7 @@ car = Car('../', transform=SDoG.XDOG)
 img = car.getitem(image_id)
 ~~~~
 
-4. Concatenate函数的用法
+Concatenate函数的用法
 
 该函数用于将简笔画图像和原图拼接在一起，训练时数据集使用该函数拼接生成的图像
 ~~~
@@ -89,27 +79,62 @@ def Concatenate(root, path1, path2):
 
 **path2**:原图所在文件夹
 
-拼接后生成的图像位于 **root/dataset/bird**\
-
-----
-## Style_transfer
-
-Style Transfer GAN 使用的是cycleGAN，根据论文Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks复现
-Dataset使用bash ./datasets/download_cyclegan_dataset.sh maps
-训练模型：python cycleGAN.py --data_root 'your data directory'
+拼接后生成的图像位于 **root/SG_Dataset/bird**/ 或**root/SG_Dataset/car/**
 
 
-Style Transfer CNN旨在对比，使用的是VGG19的已经训练好的网络。
 
+至此完成Sketch Generation部分数据集准备。（实际使用的数据集经过人工筛选处理）
+
+
+
+Style Transfer部分:
+
+此部分没有对原始数据集进行额外处理，可由此获得原始数据集：[下载地址](https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/) (使用了maps文件夹中的图像，将maps文件夹放在ST_Dataset文件夹中即可)
 
 
 
 ----
 ## 运行程序
-目前默认读入鸟类数据集
+目前Sketch Generation部分默认使用Car_dataset
 ~~~
-python data_loader.py
+cd SketchGeneration
 python GAN.py
 ~~~
 
-注意：运行GAN.py和Visualize.py时，需分别在项目中创建GAN_file文件夹和visualize文件夹保存结果。
+运行完GAN.py得到模型参数后，在目录下放入img0.jpg。运行
+
+```
+python implementation.py
+```
+
+可以得到生成出来的图片img_final.jpg。运行时间大约为1分钟。
+
+```
+cd ../StyleTransfer
+python cycleGAN.py
+```
+
+
+
+## 方法介绍
+
+1、数据集的使用处理
+
+2、Sketch Generation部分（训练完成后的噪声处理）
+
+3、可视化部分(T-SNE降维展示)
+
+4、Style Transfer部分（Cycle GAN和CNN的结果对比）
+
+
+
+## 实验结果和分析
+
+
+
+## Contributor
+
+
+
+## References
+
